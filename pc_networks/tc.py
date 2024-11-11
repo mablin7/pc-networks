@@ -19,7 +19,7 @@ class TCParameters:
     # Voltage and calcium parameters
     e: float = 0.1  # Steepness parameter for calcium influx in soma (mV/mV)
     delta_CaV: float = 5.16  # Calcium rise speed in dendrites (mV)
-    eps_z: float = 8.0  # Maximum subtraction to z's decay rate (a.u.)
+    delta_eps_z: float = 8.0  # Maximum subtraction to z's decay rate (a.u.)
     delta_V: float = 1.0  # Depolarization slope Vd AdEx (mV)
     delta_Vsd: float = 5.0  # Depolarization slope Vsd,i (mV)
 
@@ -43,7 +43,7 @@ class TCParameters:
     g_L: float = 0.1  # Leak conductance (μS)
 
     # Currents and dynamics
-    Iint: float = 91.0  # Nav-associated intrinsic current (nA)
+    Iint: float = 1.2 * 91.0  # Nav-associated intrinsic current (nA)
     k: float = (
         5e-4  # Slope for quasilinear region of a dynamics (low calcium levels) (1/nA)
     )
@@ -93,6 +93,8 @@ class TCParameters:
     w0: float = 4.0  # Initial parameter for wz nullcline positioning (nA)
     w_reset: float = 15.0  # wz' reset value (nA)
     wd_reset: float = 15.0  # wd' reset value (nA)
+
+    z_lim: float = 50.0  # z threshold
 
 
 class PurkinjeCellTC:
@@ -148,8 +150,8 @@ class PurkinjeCellTC:
         g_KCa = 1 / (1 + np.exp(-self.p.m * (Ca_total - self.p.Ca_th)))
 
         # Slow dynamics
-        eps_z = self.p.eps_z0 - self.p.eps_z / (
-            1 + np.exp(-0.1 * (self.z + self.d_res - 100))
+        eps_z = self.p.eps_z0 - self.p.delta_eps_z / (
+            1 + np.exp(-self.p.l * (self.z + self.d_res - self.p.z_lim))
         )
         dz = -eps_z * self.z / self.p.tau_R
         d_dres = (g_KCa**self.p.P) * self.p.d_res - self.d_res / self.p.tau_R
